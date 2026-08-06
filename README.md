@@ -85,6 +85,44 @@ drop plus an add).
    redirect, not the security boundary: the `/admin` page itself re-validates the
    token against the API before rendering anything.
 
+## Authorization: what is and is not enforced
+
+Read this before wiring the admin panel to the database.
+
+**Enforced, server-side**
+
+- Reaching `/admin` requires a valid session. `app/admin/page.tsx` calls
+  `getCurrentUser()`, which validates the token against the API before rendering.
+  An expired or forged token never gets a page back.
+- `middleware.ts` only checks that a cookie exists. It is a redirect for
+  convenience, not the boundary.
+
+**Not enforced, because it does not exist yet**
+
+- Creating a brand, creating a product and deleting a product are `setState`
+  calls in the browser. No endpoint receives them, which is also why the changes
+  vanish on reload.
+- There are no roles. `users` has no role column, so every authenticated user can
+  do everything the panel offers. With one seed account that is invisible; the
+  day a second user exists, it is not.
+- The validation in `AdminDashboard` (non-negative price and units, non-empty
+  name) is a courtesy to the person typing. Any client that is not the browser
+  skips it entirely.
+
+**When those endpoints are added**
+
+1. Add a `role` column to `users` through an Alembic migration.
+2. Write a `require_admin` dependency on top of `get_current_user` that answers
+   403 when the role is not enough.
+3. Apply it to **every** write endpoint, one by one. The one that gets forgotten
+   is the one that is open.
+4. Re-validate every input on the server. Hiding a button protects nothing —
+   anyone can send the request with curl.
+
+Also note that `logout` clears the cookie but does not revoke the token, which
+stays valid until it expires. With 7-day sessions that is a real window if a
+token ever leaks; add a denylist if that matters for your deployment.
+
 ## Landing page performance
 
 The landing and brand pages are statically generated with no request-time data
@@ -144,8 +182,11 @@ backend/
 - **Only `users` is persisted.** Brands and products live in `data/catalog.ts` and in
   the admin panel's local state, so changes there are lost on reload. Wiring them to
   the API is the intended next step; the shapes already line up.
+- **No roles.** Every authenticated user has full access to the panel.
 - **Tokens are stateless.** Signing out clears the cookie but does not revoke the
-  token server-side. Add a denylist if that matters for your case.
+  token server-side.
+
+See the authorization section above before removing any of these.
 
 ## Before deploying
 
