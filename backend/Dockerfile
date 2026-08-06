@@ -12,10 +12,13 @@ COPY requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY app ./app
+COPY migrations ./migrations
+COPY alembic.ini docker-entrypoint.sh ./
+RUN chmod +x docker-entrypoint.sh
 
 RUN adduser --system --uid 1001 apiuser
 USER apiuser
 
 EXPOSE 3031
 
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "3031"]
+CMD ["./docker-entrypoint.sh"]

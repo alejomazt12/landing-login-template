@@ -10,11 +10,11 @@ from contextlib import asynccontextmanager
 
 from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from sqlalchemy import select, text
+from sqlalchemy import inspect, select, text
 from sqlalchemy.orm import Session
 
 from app.config import get_settings
-from app.database import Base, engine, get_db
+from app.database import engine, get_db
 from app.models import User
 from app.routers import auth
 from app.schemas import HealthResponse
@@ -24,13 +24,17 @@ logger = logging.getLogger("uvicorn.error")
 settings = get_settings()
 
 
-def create_tables_and_seed() -> None:
-    """Create the schema and the seed admin user if they are missing.
+def seed_admin_user() -> None:
+    """Create the seed admin user if it is missing.
 
-    Fine for a template. A real deployment should move this to Alembic
-    migrations so schema changes are versioned and reversible.
+    The schema itself is owned by Alembic: the container runs
+    `alembic upgrade head` before this, so a missing table here means the
+    migrations did not run rather than something to paper over.
     """
-    Base.metadata.create_all(bind=engine)
+    if not inspect(engine).has_table("users"):
+        raise RuntimeError(
+            "The 'users' table does not exist. Run 'alembic upgrade head' before starting the API."
+        )
 
     with Session(engine) as db:
         email = settings.seed_admin_email.lower()
@@ -51,7 +55,7 @@ async def lifespan(_: FastAPI):
     if not settings.debug and settings.jwt_secret == "change-me-in-production":
         raise RuntimeError("JWT_SECRET must be set to a unique value outside debug mode")
 
-    create_tables_and_seed()
+    seed_admin_user()
     yield
 
 

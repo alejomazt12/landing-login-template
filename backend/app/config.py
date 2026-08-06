@@ -14,7 +14,11 @@ class Settings(BaseSettings):
     # default value when debug is off (see main.py).
     jwt_secret: str = "change-me-in-production"
     jwt_algorithm: str = "HS256"
-    session_ttl_minutes: int = 60 * 12
+
+    # How long a session stays valid. Drives both the JWT expiry and the
+    # cookie's Max-Age, so the two can never drift apart.
+    # Defaults to 7 days; override with SESSION_TTL_MINUTES.
+    session_ttl_minutes: int = 60 * 24 * 7
 
     # Seed account created on first boot so the template is usable right away.
     seed_admin_email: str = "admin@example.com"
