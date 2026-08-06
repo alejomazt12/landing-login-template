@@ -1,0 +1,10 @@
+node_modules
+.next
+coverage
+npm-debug.log*
+.env*.local
+__tests__
+jest.config.ts
+jest.setup.ts
+Dockerfile
+.dockerignore

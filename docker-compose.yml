@@ -1,0 +1,46 @@
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-template}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-template}
+      POSTGRES_DB: ${POSTGRES_DB:-template}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-template}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build: ./backend
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-template}:${POSTGRES_PASSWORD:-template}@db:5432/${POSTGRES_DB:-template}
+      JWT_SECRET: ${JWT_SECRET:-change-me-in-production}
+      SEED_ADMIN_EMAIL: ${SEED_ADMIN_EMAIL:-admin@example.com}
+      SEED_ADMIN_PASSWORD: ${SEED_ADMIN_PASSWORD:-admin1234}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3030}
+      DEBUG: ${DEBUG:-true}
+    ports:
+      - "3031:3031"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  frontend:
+    build: ./frontend
+    restart: unless-stopped
+    environment:
+      # Server-side only: the browser never sees this host.
+      API_URL: http://backend:3031
+      NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:-http://localhost:3030}
+    ports:
+      - "3030:3030"
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:

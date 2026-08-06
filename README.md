@@ -1,36 +1,111 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Landing + Login Template
 
-## Getting Started
+A production-shaped starting point for a catalog site with an admin area:
+a static, SEO-tuned landing page, session-based authentication, and a
+brand/product management panel.
 
-First, run the development server:
+Page copy is in Spanish; everything else — code, comments, commits — is in English.
+
+| Layer | Stack | Port |
+|---|---|---|
+| Frontend | Next.js 16 (App Router), React 19, TypeScript, CSS Modules | 3030 |
+| Backend | FastAPI, SQLAlchemy 2, PyJWT, bcrypt | 3031 |
+| Database | PostgreSQL 16 — a single `users` table | 5432 |
+
+## Quick start with Docker
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+cp .env.example .env      # edit JWT_SECRET before any real deployment
+docker compose up --build
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+- Landing: <http://localhost:3030>
+- Admin: <http://localhost:3030/admin> (redirects to the login page)
+- API docs: <http://localhost:3031/docs> (only while `DEBUG=true`)
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+The seed account is created on first boot: **admin@example.com / admin1234**.
+Change it through `SEED_ADMIN_EMAIL` and `SEED_ADMIN_PASSWORD`.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Local development
 
-## Learn More
+```bash
+# Backend — needs Postgres running, or point DATABASE_URL at SQLite
+cd backend
+python -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt
+uvicorn app.main:app --reload --port 3031
 
-To learn more about Next.js, take a look at the following resources:
+# Frontend
+cd frontend
+npm install
+npm run dev          # http://localhost:3030
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Tests
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```bash
+cd frontend && npm test          # Jest + React Testing Library
+cd backend && pytest             # FastAPI endpoint tests
+```
 
-## Deploy on Vercel
+## How authentication works
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+1. The browser posts credentials to the Next.js route handler at `/api/auth/login`.
+2. That handler — running on the server — calls FastAPI and receives a JWT.
+3. The token is stored in an **httpOnly** cookie. Client JavaScript can never read it,
+   and the browser never learns the API's address.
+4. `middleware.ts` redirects anonymous visitors away from `/admin`. That is a UX
+   redirect, not the security boundary: the `/admin` page itself re-validates the
+   token against the API before rendering anything.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Landing page performance
+
+The landing and brand pages are statically generated with no request-time data
+fetching. The only client component on them is the theme toggle.
+
+- Self-hosted fonts through `next/font` — no external requests, no layout shift
+- `ItemList` and `Product` JSON-LD structured data
+- `sitemap.xml` and `robots.txt` generated from the catalog data
+- Light and dark themes applied before first paint, so the page never flashes
+- `prefers-reduced-motion` respected throughout
+
+## Project layout
+
+```
+frontend/
+  app/
+    page.tsx                  Landing page (static)
+    brands/[brand]/           Brand detail pages (statically generated)
+    login/                    Login page and client form
+    admin/                    Protected panel: brands and products
+    api/auth/                 Route handlers that own the session cookie
+  components/                 Header, footer, theme toggle
+  data/catalog.ts             Demo catalog — replace with API calls
+  lib/session.ts              Server-side session helpers
+  __tests__/                  Jest tests
+backend/
+  app/
+    main.py                   FastAPI app, health check, startup seed
+    models.py                 The `users` table
+    routers/auth.py           /auth/login, /auth/me, /auth/logout
+    security.py               bcrypt hashing and JWT helpers
+  tests/                      pytest suite
+```
+
+## Deliberate limits
+
+- **Only `users` is persisted.** Brands and products live in `data/catalog.ts` and in
+  the admin panel's local state, so changes there are lost on reload. Wiring them to
+  the API is the intended next step; the shapes already line up.
+- **The schema is created on startup** rather than through migrations. Add Alembic
+  before the first real deployment so schema changes are versioned and reversible.
+- **Tokens are stateless.** Signing out clears the cookie but does not revoke the
+  token server-side. Add a denylist if that matters for your case.
+
+## Before deploying
+
+- Set `JWT_SECRET` to a unique value (`openssl rand -hex 32`) and `DEBUG=false`.
+  The app refuses to start with the default secret when debug is off.
+- Change the seed credentials.
+- Set `NEXT_PUBLIC_SITE_URL` to the real domain so canonical URLs and the sitemap
+  point at the right place.
