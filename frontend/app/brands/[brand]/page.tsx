@@ -6,8 +6,6 @@ import SiteFooter from "@/components/SiteFooter";
 import SiteHeader from "@/components/SiteHeader";
 import { brands, formatPrice, getBrand, stockLevel, totalUnits } from "@/data/catalog";
 
-import styles from "./brand.module.css";
-
 type Props = {
   params: Promise<{ brand: string }>;
 };
@@ -35,6 +33,12 @@ const STOCK_LABELS = {
   "in-stock": "Disponible",
   "low-stock": "Últimas unidades",
   "sold-out": "Agotado",
+} as const;
+
+const STOCK_STYLES = {
+  "in-stock": "text-success",
+  "low-stock": "text-warning",
+  "sold-out": "text-danger",
 } as const;
 
 export default async function BrandPage({ params }: Props) {
@@ -77,81 +81,106 @@ export default async function BrandPage({ params }: Props) {
       <SiteHeader />
 
       <main
-        className="container"
+        className="page-container"
         style={{ "--brand": brand.color } as React.CSSProperties}
       >
-        <nav className={styles.breadcrumb}>
-          <Link href="/" className={`mono ${styles.back}`}>
+        <nav className="pt-8.5">
+          <Link
+            href="/"
+            className="font-mono text-xs tracking-[0.12em] uppercase text-ink-subtle transition-colors duration-200 ease-board hover:text-ink"
+          >
             ← Todas las marcas
           </Link>
         </nav>
 
-        <header className={styles.header}>
-          <div className={styles.titleBlock}>
+        <header className="flex flex-wrap items-start justify-between gap-7 border-b-[3px] border-brand pt-8.5 pb-8 sm:items-end">
+          <div className="flex flex-col gap-2">
             <p className="eyebrow">{brand.origin}</p>
-            <h1 className={styles.title}>{brand.name}</h1>
-            <p className={styles.tagline}>{brand.tagline}</p>
+            <h1 className="text-[clamp(3rem,9vw,6.5rem)] leading-[0.92] tracking-[-0.045em]">
+              {brand.name}
+            </h1>
+            <p className="text-base text-ink-muted">{brand.tagline}</p>
           </div>
 
-          <dl className={styles.counters}>
-            <div className={styles.counter}>
-              <dt className="eyebrow">Unidades</dt>
-              <dd className={`mono ${styles.counterValue}`}>{units}</dd>
-            </div>
-            <div className={styles.counter}>
-              <dt className="eyebrow">Referencias</dt>
-              <dd className={`mono ${styles.counterValue}`}>{brand.products.length}</dd>
-            </div>
+          <dl className="flex gap-6 sm:gap-8.5">
+            {[
+              { label: "Unidades", value: units },
+              { label: "Referencias", value: brand.products.length },
+            ].map((counter) => (
+              <div key={counter.label} className="flex flex-col items-start gap-0.5">
+                <dt className="eyebrow">{counter.label}</dt>
+                <dd className="brand-ink font-mono text-[34px] leading-none font-medium tracking-[-0.03em] tabular-nums">
+                  {counter.value}
+                </dd>
+              </div>
+            ))}
           </dl>
         </header>
 
-        <ul className={styles.list}>
+        <ul className="grid grid-cols-[repeat(auto-fill,minmax(320px,1fr))] gap-px border border-line bg-line">
           {brand.products.map((product) => {
             const level = stockLevel(product.units);
 
             return (
-              <li key={product.id} className={styles.card}>
-                <div className={styles.cardHeader}>
+              <li
+                key={product.id}
+                className="flex flex-col gap-4.5 bg-surface px-6 pt-6.5 pb-6 transition-colors duration-200 ease-board hover:bg-surface-raised"
+              >
+                <div className="flex items-start justify-between gap-3.5">
                   <div>
-                    <h2 className={styles.productName}>{product.name}</h2>
-                    <p className={styles.variant}>{product.variant}</p>
+                    <h2 className="text-[26px] tracking-[-0.025em]">{product.name}</h2>
+                    <p className="mt-0.75 text-sm text-ink-muted">{product.variant}</p>
                   </div>
-                  <span className={`mono ${styles.badge}`} data-level={level}>
+                  <span
+                    className={`shrink-0 rounded-full border border-current px-2.25 pt-1 pb-0.75 font-mono text-[10px] font-medium tracking-[0.1em] whitespace-nowrap uppercase ${STOCK_STYLES[level]}`}
+                  >
                     {STOCK_LABELS[level]}
                   </span>
                 </div>
 
-                <ul className={styles.chips}>
-                  <li className={`mono ${styles.chip}`}>{product.year}</li>
-                  <li className={`mono ${styles.chip}`}>{product.transmission}</li>
-                  <li className={`mono ${styles.chip}`}>{product.fuel}</li>
+                <ul className="flex flex-wrap gap-1.5">
+                  {[product.year, product.transmission, product.fuel].map((chip) => (
+                    <li
+                      key={String(chip)}
+                      className="rounded-[3px] border border-line bg-canvas-alt px-2 pt-0.75 pb-0.5 font-mono text-[11px] text-ink-muted"
+                    >
+                      {chip}
+                    </li>
+                  ))}
                 </ul>
 
-                <div className={styles.meter}>
+                <div className="mt-auto flex items-end justify-between gap-4 pt-1.5">
                   <div
-                    className={styles.blocks}
                     role="img"
                     aria-label={`${product.units} unidades disponibles`}
+                    className="flex max-w-[60%] flex-wrap gap-1"
                   >
                     {Array.from({ length: maxUnits }, (_, index) => (
                       <span
                         key={index}
-                        className={styles.block}
-                        data-filled={index < product.units}
+                        className={`h-5.5 w-2.5 rounded-[1px] border ${
+                          index < product.units
+                            ? "border-brand bg-brand"
+                            : "border-line-strong bg-transparent"
+                        }`}
                       />
                     ))}
                   </div>
-                  <p className={`mono ${styles.count}`}>
-                    <span className={styles.countNumber}>{product.units}</span>
-                    <span className={styles.countLabel}>
+                  <p className="flex items-baseline gap-1.5 font-mono tabular-nums">
+                    <span className="text-[28px] leading-none font-medium tracking-[-0.03em]">
+                      {product.units}
+                    </span>
+                    <span className="text-[11px] tracking-[0.12em] uppercase text-ink-subtle">
                       {product.units === 1 ? "unidad" : "unidades"}
                     </span>
                   </p>
                 </div>
 
-                <div className={styles.footer}>
-                  <p className={`mono ${styles.price}`}>{formatPrice(product.price)}</p>
-                  <p className={styles.priceNote}>Precio de lista</p>
+                <div className="border-t border-line pt-4">
+                  <p className="font-mono text-lg font-medium tracking-[-0.01em] tabular-nums">
+                    {formatPrice(product.price)}
+                  </p>
+                  <p className="mt-0.5 text-[11.5px] text-ink-subtle">Precio de lista</p>
                 </div>
               </li>
             );

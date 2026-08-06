@@ -3,21 +3,24 @@ import { Archivo, IBM_Plex_Mono, IBM_Plex_Sans } from "next/font/google";
 
 import "./globals.css";
 
-const display = Archivo({
-  variable: "--font-display",
+// The CSS variable names are the font families themselves; the semantic names
+// (--font-display, --font-body, --font-mono) are mapped in globals.css so
+// Tailwind can generate utilities from them without recursing.
+const archivo = Archivo({
+  variable: "--font-archivo",
   subsets: ["latin"],
   display: "swap",
 });
 
-const body = IBM_Plex_Sans({
-  variable: "--font-body",
+const plexSans = IBM_Plex_Sans({
+  variable: "--font-plex-sans",
   subsets: ["latin"],
   weight: ["400", "500", "600"],
   display: "swap",
 });
 
-const mono = IBM_Plex_Mono({
-  variable: "--font-mono",
+const plexMono = IBM_Plex_Mono({
+  variable: "--font-plex-mono",
   subsets: ["latin"],
   weight: ["400", "500", "600"],
   display: "swap",
@@ -53,11 +56,14 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="es" className={`${display.variable} ${body.variable} ${mono.variable}`}>
+    <html
+      lang="es"
+      className={`${archivo.variable} ${plexSans.variable} ${plexMono.variable}`}
+    >
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
-      <body>{children}</body>
+      <body className="flex min-h-dvh flex-col [&>main]:flex-1">{children}</body>
     </html>
   );
 }

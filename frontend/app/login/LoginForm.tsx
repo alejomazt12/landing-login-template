@@ -3,11 +3,12 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-import styles from "./login.module.css";
-
 type Props = {
   redirectTo: string;
 };
+
+const INPUT_CLASS =
+  "rounded-[3px] border border-line-strong bg-canvas-alt px-3 py-2.75 font-mono text-sm text-ink transition-colors duration-200 ease-board outline-none placeholder:text-ink-subtle focus:border-accent";
 
 export default function LoginForm({ redirectTo }: Props) {
   const router = useRouter();
@@ -47,8 +48,8 @@ export default function LoginForm({ redirectTo }: Props) {
   }
 
   return (
-    <form className={styles.form} onSubmit={handleSubmit} noValidate>
-      <label className={styles.field}>
+    <form className="mt-7 flex flex-col gap-4" onSubmit={handleSubmit} noValidate>
+      <label className="flex flex-col gap-1.5">
         <span className="eyebrow">Correo</span>
         <input
           type="email"
@@ -56,11 +57,11 @@ export default function LoginForm({ redirectTo }: Props) {
           autoComplete="email"
           required
           placeholder="admin@example.com"
-          className={`mono ${styles.input}`}
+          className={INPUT_CLASS}
         />
       </label>
 
-      <label className={styles.field}>
+      <label className="flex flex-col gap-1.5">
         <span className="eyebrow">Contraseña</span>
         <input
           type="password"
@@ -69,17 +70,24 @@ export default function LoginForm({ redirectTo }: Props) {
           required
           minLength={8}
           placeholder="••••••••"
-          className={`mono ${styles.input}`}
+          className={INPUT_CLASS}
         />
       </label>
 
       {error ? (
-        <p className={styles.error} role="alert">
+        <p
+          role="alert"
+          className="rounded-[3px] border border-danger px-3 py-2.25 text-[13px] text-danger"
+        >
           {error}
         </p>
       ) : null}
 
-      <button type="submit" className={styles.submit} disabled={pending}>
+      <button
+        type="submit"
+        disabled={pending}
+        className="mt-1 cursor-pointer rounded-[3px] bg-accent px-4 py-3 font-display text-[15px] font-bold text-canvas transition-opacity duration-200 ease-board hover:opacity-88 disabled:cursor-progress disabled:opacity-60"
+      >
         {pending ? "Ingresando…" : "Ingresar"}
       </button>
     </form>

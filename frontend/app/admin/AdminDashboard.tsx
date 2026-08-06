@@ -4,8 +4,6 @@ import { useMemo, useState } from "react";
 
 import { formatPrice, stockLevel, type Brand } from "@/data/catalog";
 
-import styles from "./admin.module.css";
-
 type Props = {
   initialBrands: Brand[];
 };
@@ -34,6 +32,22 @@ const STOCK_LABELS = {
   "low-stock": "Últimas",
   "sold-out": "Agotado",
 } as const;
+
+const STOCK_STYLES = {
+  "in-stock": "text-success",
+  "low-stock": "text-warning",
+  "sold-out": "text-danger",
+} as const;
+
+const INPUT_CLASS =
+  "w-full rounded-[3px] border border-line-strong bg-canvas-alt px-2.75 py-2.5 font-body text-sm text-ink transition-colors duration-200 ease-board outline-none focus:border-accent";
+const SUBMIT_CLASS =
+  "mt-1 cursor-pointer rounded-[3px] bg-accent px-3.5 py-2.75 font-display text-sm font-bold text-canvas transition-opacity duration-200 ease-board hover:opacity-88";
+const CELL_CLASS = "border-b border-line px-4.5 py-2.75 whitespace-nowrap";
+const FORM_CLASS =
+  "flex flex-col gap-3.5 rounded-[3px] border border-line bg-surface px-5 pt-5.5 pb-5";
+const FORM_TITLE_CLASS =
+  "text-[13px] font-semibold tracking-[0.18em] uppercase text-ink-subtle";
 
 /**
  * Brand and product management.
@@ -157,36 +171,42 @@ export default function AdminDashboard({ initialBrands }: Props) {
   }
 
   return (
-    <div className={styles.dashboard}>
-      <dl className={styles.totals}>
-        <div className={styles.total}>
-          <dt className="eyebrow">Marcas</dt>
-          <dd className={`mono ${styles.totalValue}`}>{totals.brands}</dd>
-        </div>
-        <div className={styles.total}>
-          <dt className="eyebrow">Productos</dt>
-          <dd className={`mono ${styles.totalValue}`}>{totals.products}</dd>
-        </div>
-        <div className={styles.total}>
-          <dt className="eyebrow">Unidades</dt>
-          <dd className={`mono ${styles.totalValue}`}>{totals.units}</dd>
-        </div>
+    <div className="flex flex-col gap-7 pt-7 pb-20">
+      <dl className="flex flex-wrap rounded-[3px] border border-line bg-surface">
+        {[
+          { label: "Marcas", value: totals.brands },
+          { label: "Productos", value: totals.products },
+          { label: "Unidades", value: totals.units },
+        ].map((total) => (
+          <div
+            key={total.label}
+            className="flex-1 basis-35 border-r border-line px-4.5 pt-3.5 pb-3 last:border-r-0"
+          >
+            <dt className="eyebrow">{total.label}</dt>
+            <dd className="mt-0.75 font-mono text-[26px] font-medium tracking-[-0.02em] tabular-nums">
+              {total.value}
+            </dd>
+          </div>
+        ))}
       </dl>
 
       {message ? (
-        <p className={styles.message} role="status">
+        <p
+          role="status"
+          className="rounded-[3px] border border-accent bg-accent/10 px-3.5 py-2.5 text-[13.5px]"
+        >
           {message}
         </p>
       ) : null}
 
-      <div className={styles.forms}>
-        <form className={styles.form} onSubmit={addBrand} noValidate>
-          <h2 className={styles.formTitle}>Nueva marca</h2>
+      <div className="grid grid-cols-[repeat(auto-fit,minmax(300px,1fr))] gap-4">
+        <form onSubmit={addBrand} noValidate className={FORM_CLASS}>
+          <h2 className={FORM_TITLE_CLASS}>Nueva marca</h2>
 
-          <label className={styles.field}>
+          <label className="flex flex-col gap-1.25">
             <span className="eyebrow">Nombre</span>
             <input
-              className={styles.input}
+              className={INPUT_CLASS}
               value={brandDraft.name}
               onChange={(e) => setBrandDraft({ ...brandDraft, name: e.target.value })}
               placeholder="Ej. Nissan"
@@ -194,38 +214,38 @@ export default function AdminDashboard({ initialBrands }: Props) {
             />
           </label>
 
-          <label className={styles.field}>
+          <label className="flex flex-col gap-1.25">
             <span className="eyebrow">Descripción corta</span>
             <input
-              className={styles.input}
+              className={INPUT_CLASS}
               value={brandDraft.tagline}
               onChange={(e) => setBrandDraft({ ...brandDraft, tagline: e.target.value })}
               placeholder="Ej. Camionetas y utilitarios"
             />
           </label>
 
-          <label className={styles.field}>
+          <label className="flex flex-col gap-1.25">
             <span className="eyebrow">Color de la marca</span>
             <input
               type="color"
-              className={styles.color}
+              className="h-8.5 w-16 cursor-pointer rounded-[3px] border border-line-strong bg-canvas-alt p-0.5"
               value={brandDraft.color}
               onChange={(e) => setBrandDraft({ ...brandDraft, color: e.target.value })}
             />
           </label>
 
-          <button type="submit" className={styles.submit}>
+          <button type="submit" className={SUBMIT_CLASS}>
             Agregar marca
           </button>
         </form>
 
-        <form className={styles.form} onSubmit={addProduct} noValidate>
-          <h2 className={styles.formTitle}>Nuevo producto</h2>
+        <form onSubmit={addProduct} noValidate className={FORM_CLASS}>
+          <h2 className={FORM_TITLE_CLASS}>Nuevo producto</h2>
 
-          <label className={styles.field}>
+          <label className="flex flex-col gap-1.25">
             <span className="eyebrow">Marca</span>
             <select
-              className={styles.input}
+              className={INPUT_CLASS}
               value={productDraft.brandSlug}
               onChange={(e) => setProductDraft({ ...productDraft, brandSlug: e.target.value })}
             >
@@ -237,10 +257,10 @@ export default function AdminDashboard({ initialBrands }: Props) {
             </select>
           </label>
 
-          <label className={styles.field}>
+          <label className="flex flex-col gap-1.25">
             <span className="eyebrow">Nombre</span>
             <input
-              className={styles.input}
+              className={INPUT_CLASS}
               value={productDraft.name}
               onChange={(e) => setProductDraft({ ...productDraft, name: e.target.value })}
               placeholder="Ej. Sentra"
@@ -248,24 +268,24 @@ export default function AdminDashboard({ initialBrands }: Props) {
             />
           </label>
 
-          <label className={styles.field}>
+          <label className="flex flex-col gap-1.25">
             <span className="eyebrow">Versión</span>
             <input
-              className={styles.input}
+              className={INPUT_CLASS}
               value={productDraft.variant}
               onChange={(e) => setProductDraft({ ...productDraft, variant: e.target.value })}
               placeholder="Ej. Advance"
             />
           </label>
 
-          <div className={styles.pair}>
-            <label className={styles.field}>
+          <div className="grid grid-cols-2 gap-3">
+            <label className="flex flex-col gap-1.25">
               <span className="eyebrow">Precio</span>
               <input
                 type="number"
                 min="0"
                 step="1000"
-                className={`mono ${styles.input}`}
+                className={`${INPUT_CLASS} font-mono tabular-nums`}
                 value={productDraft.price}
                 onChange={(e) => setProductDraft({ ...productDraft, price: e.target.value })}
                 placeholder="0"
@@ -273,13 +293,13 @@ export default function AdminDashboard({ initialBrands }: Props) {
               />
             </label>
 
-            <label className={styles.field}>
+            <label className="flex flex-col gap-1.25">
               <span className="eyebrow">Unidades</span>
               <input
                 type="number"
                 min="0"
                 step="1"
-                className={`mono ${styles.input}`}
+                className={`${INPUT_CLASS} font-mono tabular-nums`}
                 value={productDraft.units}
                 onChange={(e) => setProductDraft({ ...productDraft, units: e.target.value })}
                 placeholder="0"
@@ -288,68 +308,78 @@ export default function AdminDashboard({ initialBrands }: Props) {
             </label>
           </div>
 
-          <button type="submit" className={styles.submit}>
+          <button type="submit" className={SUBMIT_CLASS}>
             Agregar producto
           </button>
         </form>
       </div>
 
-      <section className={styles.inventory}>
-        <h2 className={styles.formTitle}>Inventario</h2>
+      <section className="flex flex-col gap-4">
+        <h2 className={FORM_TITLE_CLASS}>Inventario</h2>
 
         {brands.map((brand) => (
-          <article key={brand.slug} className={styles.brandGroup}>
+          <article
+            key={brand.slug}
+            className="overflow-hidden rounded-[3px] border border-line bg-surface"
+          >
             <header
-              className={styles.brandHeader}
+              className="flex items-center gap-3 border-b border-line px-4.5 py-3.5"
               style={{ "--brand": brand.color } as React.CSSProperties}
             >
-              <span className={styles.brandSwatch} aria-hidden="true" />
-              <h3 className={styles.brandName}>{brand.name}</h3>
-              <span className={`mono ${styles.brandCount}`}>
+              <span aria-hidden="true" className="size-2.5 rounded-[2px] bg-brand" />
+              <h3 className="text-lg tracking-[-0.02em]">{brand.name}</h3>
+              <span className="ml-auto font-mono text-[11px] tracking-[0.1em] uppercase text-ink-subtle">
                 {brand.products.length} referencias
               </span>
             </header>
 
             {brand.products.length === 0 ? (
-              <p className={styles.empty}>Todavía no hay productos en esta marca.</p>
+              <p className="p-4.5 text-[13.5px] text-ink-subtle">
+                Todavía no hay productos en esta marca.
+              </p>
             ) : (
-              <div className={styles.tableWrapper}>
-                <table className={styles.table}>
+              <div className="overflow-x-auto">
+                <table className="w-full border-collapse text-sm">
                   <thead>
-                    <tr>
-                      <th>Producto</th>
-                      <th>Estado</th>
-                      <th className={styles.numeric}>Precio</th>
-                      <th className={styles.numeric}>Unidades</th>
-                      <th>
+                    <tr className="font-mono text-[10px] tracking-[0.14em] uppercase text-ink-subtle">
+                      <th className={`${CELL_CLASS} text-left font-normal`}>Producto</th>
+                      <th className={`${CELL_CLASS} text-left font-normal`}>Estado</th>
+                      <th className={`${CELL_CLASS} text-right font-normal`}>Precio</th>
+                      <th className={`${CELL_CLASS} text-right font-normal`}>Unidades</th>
+                      <th className={`${CELL_CLASS} text-right font-normal`}>
                         <span className="sr-only">Acciones</span>
                       </th>
                     </tr>
                   </thead>
-                  <tbody>
+                  <tbody className="[&>tr:last-child>td]:border-b-0">
                     {brand.products.map((product) => (
                       <tr key={product.id}>
-                        <td>
+                        <td className={`${CELL_CLASS} text-left`}>
                           {product.name}
                           {product.variant ? (
-                            <span className={styles.variant}> {product.variant}</span>
+                            <span className="text-ink-subtle"> {product.variant}</span>
                           ) : null}
                         </td>
-                        <td>
+                        <td className={`${CELL_CLASS} text-left`}>
                           <span
-                            className={`mono ${styles.badge}`}
-                            data-level={stockLevel(product.units)}
+                            className={`rounded-full border border-current px-2 pt-0.75 pb-0.5 font-mono text-[10px] tracking-[0.08em] uppercase ${
+                              STOCK_STYLES[stockLevel(product.units)]
+                            }`}
                           >
                             {STOCK_LABELS[stockLevel(product.units)]}
                           </span>
                         </td>
-                        <td className={`mono ${styles.numeric}`}>{formatPrice(product.price)}</td>
-                        <td className={`mono ${styles.numeric}`}>{product.units}</td>
-                        <td className={styles.numeric}>
+                        <td className={`${CELL_CLASS} text-right font-mono tabular-nums`}>
+                          {formatPrice(product.price)}
+                        </td>
+                        <td className={`${CELL_CLASS} text-right font-mono tabular-nums`}>
+                          {product.units}
+                        </td>
+                        <td className={`${CELL_CLASS} text-right`}>
                           <button
                             type="button"
-                            className={styles.remove}
                             onClick={() => removeProduct(brand.slug, product.id)}
+                            className="cursor-pointer rounded-[3px] border border-line px-2.25 py-1 font-mono text-[11px] text-ink-subtle transition-colors duration-200 ease-board hover:border-danger hover:text-danger"
                           >
                             Eliminar
                           </button>

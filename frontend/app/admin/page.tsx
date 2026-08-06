@@ -7,7 +7,6 @@ import { getCurrentUser } from "@/lib/session";
 
 import AdminDashboard from "./AdminDashboard";
 import SignOutButton from "./SignOutButton";
-import styles from "./admin.module.css";
 
 export const metadata: Metadata = {
   title: "Panel",
@@ -27,13 +26,15 @@ export default async function AdminPage() {
     <>
       <SiteHeader action={<SignOutButton />} />
 
-      <main className="container">
-        <header className={styles.header}>
+      <main className="page-container">
+        <header className="flex flex-wrap items-end justify-between gap-5 border-b border-line pt-11 pb-6.5">
           <div>
             <p className="eyebrow">Panel de administración</p>
-            <h1 className={styles.title}>Marcas y productos</h1>
+            <h1 className="mt-2 text-[clamp(2rem,5vw,3rem)] tracking-[-0.03em]">
+              Marcas y productos
+            </h1>
           </div>
-          <p className={`mono ${styles.user}`}>{user.email}</p>
+          <p className="font-mono text-xs text-ink-subtle">{user.email}</p>
         </header>
 
         <AdminDashboard initialBrands={brands} />

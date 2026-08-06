@@ -5,7 +5,6 @@ import SiteHeader from "@/components/SiteHeader";
 import { getCurrentUser } from "@/lib/session";
 
 import LoginForm from "./LoginForm";
-import styles from "./login.module.css";
 
 export const metadata: Metadata = {
   title: "Ingresar",
@@ -33,19 +32,19 @@ export default async function LoginPage({ searchParams }: Props) {
     <>
       <SiteHeader />
 
-      <main className={styles.main}>
-        <div className={styles.card}>
+      <main className="flex items-start justify-center px-7 pt-18 pb-24">
+        <div className="w-full max-w-[420px] rounded-[3px] border border-line border-t-[3px] border-t-accent bg-surface px-8 pt-8.5 pb-7.5">
           <p className="eyebrow">Panel de administración</p>
-          <h1 className={styles.title}>Ingresa a tu cuenta</h1>
-          <p className={styles.lede}>
+          <h1 className="mt-2.5 text-[34px] tracking-[-0.03em]">Ingresa a tu cuenta</h1>
+          <p className="mt-2.5 text-[14.5px] text-ink-muted">
             Desde aquí administras las marcas y los productos del catálogo.
           </p>
 
           <LoginForm redirectTo={redirectTo} />
 
-          <p className={styles.hint}>
+          <p className="mt-6 flex flex-col gap-0.75 border-t border-line pt-4.5 text-xs text-ink-subtle">
             <span className="eyebrow">Cuenta de prueba</span>
-            <span className="mono">admin@example.com · admin1234</span>
+            <span className="font-mono">admin@example.com · admin1234</span>
           </p>
         </div>
       </main>

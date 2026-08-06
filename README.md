@@ -8,7 +8,7 @@ Page copy is in Spanish; everything else — code, comments, commits — is in E
 
 | Layer | Stack | Port |
 |---|---|---|
-| Frontend | Next.js 16 (App Router), React 19, TypeScript, CSS Modules | 3030 |
+| Frontend | Next.js 16 (App Router), React 19, TypeScript, Tailwind CSS v4 | 3030 |
 | Backend | FastAPI, SQLAlchemy 2, PyJWT, bcrypt | 3031 |
 | Database | PostgreSQL 16 — a single `users` table | 5432 |
 
@@ -91,10 +91,28 @@ The landing and brand pages are statically generated with no request-time data
 fetching. The only client component on them is the theme toggle.
 
 - Self-hosted fonts through `next/font` — no external requests, no layout shift
+- Tailwind ships only the utilities the pages actually use
 - `ItemList` and `Product` JSON-LD structured data
 - `sitemap.xml` and `robots.txt` generated from the catalog data
 - Light and dark themes applied before first paint, so the page never flashes
 - `prefers-reduced-motion` respected throughout
+
+## Styling
+
+Tailwind CSS v4, configured in CSS rather than a `tailwind.config.js`.
+
+Theme colors are plain custom properties that are swapped per theme, and
+`@theme inline` in `app/globals.css` exposes them to Tailwind. A theme change is
+therefore a variable swap, not a second set of `dark:` classes on every element,
+and `--brand` can be overridden per row so each brand colors its own card.
+
+Three project utilities are defined with `@utility`:
+
+| Utility | What it does |
+|---|---|
+| `page-container` | Page gutter and max width, in one place |
+| `eyebrow` | Small uppercase mono label used for stat names and field labels |
+| `brand-ink` | Brand color darkened enough to stay legible as text on light grounds |
 
 ## Project layout
 
