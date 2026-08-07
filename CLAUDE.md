@@ -68,12 +68,11 @@ done.** Not "should pass", not "unrelated failure" — run it and read the outpu
 - If a suite was already failing before the change, say so explicitly instead of
   absorbing it into the result.
 
-**Known pre-existing failure:** `npm run lint` reports one error in
-`components/ThemeToggle.tsx` (`react-hooks/set-state-in-effect`) plus one warning
-in `postcss.config.mjs`. Both predate this rule. Do not silence either with a
-disable comment — the real fix is to stop re-deriving the theme in an effect when
-the inline script in `layout.tsx` has already set `data-theme`. Until then, lint
-showing exactly those two is the baseline; anything beyond them is yours.
+**The baseline is silence.** Lint reports zero errors and zero warnings, so any
+output at all belongs to the change being made. Do not restore a green by adding
+an `eslint-disable`: the rule that fires is usually pointing at something real.
+`react-hooks/set-state-in-effect` on the theme toggle was, and the fix was to
+read the applied theme instead of deriving it a second time.
 
 ## Working with a non-technical author
 
