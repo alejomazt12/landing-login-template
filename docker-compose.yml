@@ -43,5 +43,43 @@ services:
     depends_on:
       - backend
 
+  # ----- Test runners -----
+  # Behind the `test` profile, so `docker compose up` ignores them. They mount
+  # the working tree instead of baking it in, which is what lets a run pick up
+  # edits without rebuilding the image.
+  #
+  #   docker compose run --rm frontend-test
+  #   docker compose run --rm backend-test
+  #
+  # `user` keeps files the run writes (.next, __pycache__) owned by the caller
+  # rather than root.
+
+  frontend-test:
+    build:
+      context: ./frontend
+      # The deps stage carries the dev dependencies: jest, ts-node, eslint.
+      target: deps
+    profiles: ["test"]
+    user: "${HOST_UID:-1000}:${HOST_GID:-1000}"
+    working_dir: /app
+    environment:
+      HOME: /tmp
+      NEXT_TELEMETRY_DISABLED: "1"
+    volumes:
+      - ./frontend:/app
+      # Anonymous volume: keeps the image's node_modules from being shadowed by
+      # the mount above, which on the host is empty.
+      - /app/node_modules
+    command: npx jest
+
+  backend-test:
+    build: ./backend
+    profiles: ["test"]
+    user: "${HOST_UID:-1000}:${HOST_GID:-1000}"
+    # The tests bind to a throwaway SQLite file, so no db service is needed.
+    volumes:
+      - ./backend:/app
+    command: pytest -q
+
 volumes:
   postgres_data:

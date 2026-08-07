@@ -26,14 +26,113 @@ A file mixing the two in the wrong direction is a bug, not a style preference.
 
 ## Commands
 
+Everything runs in containers. Node, Python and Postgres are **not** installed on
+the host, so `npm` and `pytest` typed directly into a shell will not be found —
+that is expected, not a broken machine.
+
 ```bash
-cd frontend && npm run dev      # 3030
-cd frontend && npm test         # 26 Jest tests
-cd frontend && npm run build    # also typechecks
-cd backend && pytest            # 11 tests, including the migrations
-cd backend && alembic upgrade head
-cd backend && alembic check     # models vs migrations
+docker compose up -d --build                # the three services
+docker compose logs -f frontend             # or backend / db
+docker compose down                         # stop (keeps the database)
+
+docker compose run --rm frontend-test               # 26 Jest tests
+docker compose run --rm backend-test                # 11 pytest tests, migrations included
+docker compose run --rm frontend-test npm run build # production build, also typechecks
+docker compose run --rm frontend-test npm run lint
+docker compose exec backend alembic check           # models vs migrations
+docker compose exec backend alembic upgrade head
 ```
+
+The two `*-test` services mount the working tree, so a run picks up edits with no
+rebuild. Rebuild only when `package.json` or `requirements.txt` changes.
+
+`docker compose down -v` also deletes the database volume — every user, including
+the seed admin. Do not reach for it to "restart cleanly".
+
+## Definition of done
+
+**New code ships with its tests, and the suite is green before the work is called
+done.** Not "should pass", not "unrelated failure" — run it and read the output.
+
+- New behavior gets a new test; changed behavior gets its test updated. A change
+  that adds no test needs a reason stated out loud, and "it is only styling" is
+  one — the tests query by role and text precisely so styling does not touch
+  them.
+- Green is both suites plus the build: `frontend-test`, `backend-test`, and
+  `npm run build` for the typecheck. Touching models or migrations adds
+  `alembic check`.
+- **Never buy a green by weakening the test.** No deleted assertions, no `.skip`,
+  no `--passWithNoTests`, no loosening a matcher, and above all no editing the
+  expected value to match what the code currently returns. A failing test is a
+  finding. If the test itself is genuinely wrong, say why before changing it.
+- If a suite was already failing before the change, say so explicitly instead of
+  absorbing it into the result.
+
+**Known pre-existing failure:** `npm run lint` reports one error in
+`components/ThemeToggle.tsx` (`react-hooks/set-state-in-effect`) plus one warning
+in `postcss.config.mjs`. Both predate this rule. Do not silence either with a
+disable comment — the real fix is to stop re-deriving the theme in an effect when
+the inline script in `layout.tsx` has already set `data-theme`. Until then, lint
+showing exactly those two is the baseline; anything beyond them is yours.
+
+## Working with a non-technical author
+
+The person prompting may not read code. They describe what they see on the page,
+in Spanish, and they cannot check whether the result is right by reading a diff.
+That changes what a good answer looks like, not what a good change looks like —
+the conventions and invariants below hold regardless of who asked.
+
+**Answer in the language they wrote in; the code stays English.** The language
+rule above is about files, not about conversation. Explaining a change in Spanish
+and then naming a variable in Spanish are two different things, and only the
+second is a bug.
+
+**Restate the request before touching anything ambiguous.** One sentence naming
+the page and the visible change. "Cambio el título de la sección de marcas en la
+página principal" gives them something to correct; "Entendido, lo hago" does not.
+Ask only when two readings produce genuinely different work — then ask once, with
+concrete options, rather than a list of clarifying questions.
+
+**Their words map to these files:**
+
+| They say | It lives in |
+|---|---|
+| la página principal, el inicio, la landing | `app/page.tsx` |
+| el menú de arriba, la cabecera | `components/SiteHeader.tsx` |
+| el pie de página | `components/SiteFooter.tsx` |
+| el botón de día/noche, el tema, los colores oscuros | `components/ThemeToggle.tsx` |
+| la pantalla de ingreso, iniciar sesión | `app/login/page.tsx`, `app/login/LoginForm.tsx` |
+| el panel, el administrador | `app/admin/page.tsx`, `app/admin/AdminDashboard.tsx` |
+| la página de una marca | `app/brands/[brand]/page.tsx` |
+| las marcas, los modelos, los precios, los datos | `data/catalog.ts` |
+| los colores, los tamaños de letra, los espacios | `app/globals.css` |
+| la página de error, "no encontrado" | `app/not-found.tsx` |
+| usuarios, contraseñas, el ingreso por detrás | `backend/app/routers/auth.py` |
+
+**When a request collides with an invariant, neither comply nor refuse.** Explain
+the consequence in one non-technical sentence and deliver the version that holds
+the line. The three that come up most:
+
+- *"Pon el texto en amarillo Renault"* — raw brand yellow reads at 1.4:1 on light
+  backgrounds, which is illegible for many people. Use `brand-ink`.
+- *"Esconde el botón de borrar para los que no son admin"* — hiding a button
+  hides nothing; the request still works from a terminal. The check belongs on
+  the FastAPI endpoint.
+- *"Haz que la página traiga los datos del servidor"* — the landing page is
+  static and measured at 100/100/100/100. Say what it costs, then confirm.
+
+**"Ya quedó" is not a report.** Say what changed, at which URL they can see it,
+and what to look for once there. Then the suite result. They are verifying in a
+browser, so give them the browser steps.
+
+**Edits in the admin panel vanish on reload — that is the known gap below, not a
+bug to patch.** If they report it as broken, name it as the missing backend and
+point at the README's order for closing it. Do not paper over it with
+`localStorage`.
+
+**Change what was asked and nothing else.** No drive-by renames, refactors or
+dependency bumps riding along in someone else's change — they cannot review what
+they cannot read. Spot something else broken, mention it separately.
 
 ## Conventions that are easy to break
 
