@@ -35,7 +35,7 @@ docker compose up -d --build                # the three services
 docker compose logs -f frontend             # or backend / db
 docker compose down                         # stop (keeps the database)
 
-docker compose run --rm frontend-test               # 26 Jest tests
+docker compose run --rm frontend-test               # 36 Jest tests
 docker compose run --rm backend-test                # 11 pytest tests, migrations included
 docker compose run --rm frontend-test npm run build # production build, also typechecks
 docker compose run --rm frontend-test npm run lint
