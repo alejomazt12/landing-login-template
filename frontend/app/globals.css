@@ -27,6 +27,15 @@
   /* Overridden per brand so each brand page shifts identity. */
   --brand: var(--accent);
 
+  /* Secondary accent, a tint of the accent, and text that sits on the accent.
+     Only the laundry site gives the first two values of its own. */
+  --accent-2: var(--accent);
+  --accent-soft: var(--surface-raised);
+  --on-accent: var(--background);
+
+  /* Typeface for headings; a site can swap it like any color. */
+  --display-face: var(--font-archivo);
+
   /* How much of the brand color survives when it is used as text. Full
      strength on dark grounds; darkened on light ones, where the lighter brand
      colors (Renault yellow at 1.4:1) would otherwise fail contrast. Consumed
@@ -88,6 +97,84 @@
   --danger: #a63a24;
 }
 
+/* ---------------------------------------------------------------
+   Laundry site — mint, lavender and linen white, taken from its photo.
+
+   Scoped to the element carrying data-site="laundry" rather than :root, so
+   the header and footer inside it pick the palette up with no extra classes.
+   Tokens that :root derives from others (--brand, --on-accent) are restated
+   here because a custom property resolves where it is declared, not where it
+   is used.
+   --------------------------------------------------------------- */
+
+[data-site="laundry"] {
+  --background: #0b1615;
+  --background-alt: #0f1d1c;
+  --surface: #112321;
+  --surface-raised: #162b29;
+  --line: #213a37;
+  --line-strong: #31524e;
+  --text: #e5f2f0;
+  --text-muted: #a5c1bd;
+  --text-subtle: #86a4a0;
+  --accent: #6dd5c6;
+  --accent-2: #b9a3ea;
+  --accent-soft: #143633;
+  --on-accent: #06201d;
+  --brand: var(--accent);
+  --display-face: var(--font-fraunces), var(--font-archivo), serif;
+}
+
+@media (prefers-color-scheme: light) {
+  [data-site="laundry"] {
+    --background: #f3f8f7;
+    --background-alt: #e8f2f0;
+    --surface: #ffffff;
+    --surface-raised: #ffffff;
+    --line: #d3e3e0;
+    --line-strong: #a9c4c0;
+    --text: #10302e;
+    --text-muted: #45625f;
+    --text-subtle: #52706c;
+    --accent: #0b7268;
+    --accent-2: #6a4fa3;
+    --accent-soft: #dcf0ec;
+    --on-accent: #ffffff;
+  }
+}
+
+:root[data-theme="dark"] [data-site="laundry"] {
+  --background: #0b1615;
+  --background-alt: #0f1d1c;
+  --surface: #112321;
+  --surface-raised: #162b29;
+  --line: #213a37;
+  --line-strong: #31524e;
+  --text: #e5f2f0;
+  --text-muted: #a5c1bd;
+  --text-subtle: #86a4a0;
+  --accent: #6dd5c6;
+  --accent-2: #b9a3ea;
+  --accent-soft: #143633;
+  --on-accent: #06201d;
+}
+
+:root[data-theme="light"] [data-site="laundry"] {
+  --background: #f3f8f7;
+  --background-alt: #e8f2f0;
+  --surface: #ffffff;
+  --surface-raised: #ffffff;
+  --line: #d3e3e0;
+  --line-strong: #a9c4c0;
+  --text: #10302e;
+  --text-muted: #45625f;
+  --text-subtle: #52706c;
+  --accent: #0b7268;
+  --accent-2: #6a4fa3;
+  --accent-soft: #dcf0ec;
+  --on-accent: #ffffff;
+}
+
 /* `inline` keeps the utilities pointing at the variables instead of copying
    their values, which is what lets a theme swap take effect at runtime. */
 @theme inline {
@@ -102,11 +189,14 @@
   --color-ink-subtle: var(--text-subtle);
   --color-accent: var(--accent);
   --color-brand: var(--brand);
+  --color-accent-2: var(--accent-2);
+  --color-accent-soft: var(--accent-soft);
+  --color-on-accent: var(--on-accent);
   --color-success: var(--success);
   --color-warning: var(--warning);
   --color-danger: var(--danger);
 
-  --font-display: var(--font-archivo);
+  --font-display: var(--display-face);
   --font-body: var(--font-plex-sans);
   --font-mono: var(--font-plex-mono);
 
@@ -129,11 +219,20 @@
   h1,
   h2,
   h3 {
-    font-family: var(--font-archivo), system-ui, sans-serif;
+    font-family: var(--display-face), system-ui, sans-serif;
     font-weight: 700;
     line-height: 1.02;
     letter-spacing: -0.02em;
     text-wrap: balance;
+  }
+
+  /* Fraunces with its soft axis reads warmer than Archivo, and a serif wants a
+     lighter weight and a little more leading than a grotesque. */
+  [data-site="laundry"] :is(h1, h2, h3) {
+    font-weight: 560;
+    line-height: 1.06;
+    letter-spacing: -0.015em;
+    font-variation-settings: "SOFT" 100;
   }
 
   :focus-visible {
