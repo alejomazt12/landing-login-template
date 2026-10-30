@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 
 import SiteFooter from "@/components/SiteFooter";
@@ -9,8 +10,15 @@ import { brands, totalUnits } from "@/data/catalog";
  *
  * Fully static: no data fetching at request time, no client components beyond
  * the theme toggle. That is what keeps the Lighthouse numbers where they are.
+ *
+ * The hero loop is decoration layered over a still frame of itself, so the
+ * page carries its meaning without it: phones, reduced-motion visitors and
+ * anyone whose video fails to load all see the poster instead.
  */
 export const dynamic = "force-static";
+
+const HERO_POSTER_WIDTH = 1600;
+const HERO_POSTER_HEIGHT = 900;
 
 export default function HomePage() {
   const unitCount = brands.reduce((sum, brand) => sum + totalUnits(brand), 0);
@@ -30,42 +38,92 @@ export default function HomePage() {
 
   return (
     <>
-      <SiteHeader />
+      <SiteHeader overlay />
 
-      <main className="page-container">
-        <section className="border-b border-line pt-13 pb-14 md:pt-21">
-          <p className="eyebrow">Catálogo · Corte de hoy</p>
-          <h1 className="mt-4.5 text-[clamp(2.6rem,7vw,5.4rem)] tracking-[-0.035em]">
-            Qué hay <em className="not-italic text-accent">disponible</em> ahora mismo
-          </h1>
-          <p className="mt-5.5 max-w-[58ch] text-[17px] text-ink-muted">
-            Escoge una marca y mira el conteo real de unidades por versión, con precio,
-            año y caja. Lo que aparece en cero ya salió del inventario.
-          </p>
+      <main>
+        <section
+          aria-labelledby="hero-heading"
+          className="on-hero relative isolate flex min-h-[clamp(34rem,100svh,52rem)] flex-col overflow-hidden"
+        >
+          <div aria-hidden="true" className="absolute inset-0 -z-10">
+            <Image
+              src="/hero-poster.jpg"
+              alt=""
+              width={HERO_POSTER_WIDTH}
+              height={HERO_POSTER_HEIGHT}
+              priority
+              sizes="100vw"
+              className="size-full object-cover"
+            />
+            {/* Desktop only, and only where the visitor has not asked for less
+                motion. The still above shows through until a frame decodes, so
+                there is nothing to fall back to. */}
+            <video
+              autoPlay
+              loop
+              muted
+              playsInline
+              preload="none"
+              className="absolute inset-0 hidden size-full object-cover md:[@media(prefers-reduced-motion:no-preference)]:block"
+            >
+              <source src="/hero-loop.mp4" type="video/mp4" />
+            </video>
+            <div className="hero-veil absolute inset-0" />
+            {/* The header has no bar of its own, so this is what keeps it
+                legible when a bright frame drifts under it. */}
+            <div className="absolute inset-x-0 top-0 h-40 bg-linear-to-b from-hero-veil/75 to-transparent" />
+          </div>
 
-          <dl className="mt-11 flex flex-wrap rounded-[3px] border border-line bg-surface">
-            {[
-              { label: "Marcas", value: brands.length },
-              { label: "Referencias", value: productCount },
-              { label: "Unidades", value: unitCount },
-            ].map((stat) => (
-              <div
-                key={stat.label}
-                className="flex-1 basis-35 border-r border-line px-5 pt-4 pb-3.5 last:border-r-0"
-              >
-                <dt className="eyebrow">{stat.label}</dt>
-                <dd className="mt-1 font-mono text-3xl font-medium tracking-[-0.02em] tabular-nums">
-                  {stat.value}
-                </dd>
-              </div>
-            ))}
-          </dl>
+          <div className="page-container flex flex-1 flex-col justify-center pt-28 pb-14 md:pt-32">
+            <p className="eyebrow">Catálogo · Corte de hoy</p>
+            <h1
+              id="hero-heading"
+              className="mt-4.5 max-w-[17ch] text-[clamp(2.6rem,7vw,5.4rem)] tracking-[-0.035em] text-ink"
+            >
+              Qué hay <em className="not-italic text-accent">disponible</em> ahora mismo
+            </h1>
+            <p className="mt-5.5 max-w-[52ch] text-[17px] text-ink-muted">
+              Escoge una marca y mira el conteo real de unidades por versión, con precio,
+              año y caja. Lo que aparece en cero ya salió del inventario.
+            </p>
+            <Link
+              href="#marcas"
+              className="mt-9 inline-flex w-fit items-center gap-3 rounded-[3px] bg-accent px-6 py-3.5 font-mono text-xs font-semibold tracking-[0.14em] uppercase text-hero-veil transition-colors duration-200 ease-board hover:bg-hero-accent-hover"
+            >
+              Ver las marcas →
+            </Link>
+          </div>
+
+          <div className="border-t border-line bg-hero-veil/55">
+            <dl className="page-container flex flex-wrap py-4.5">
+              {[
+                { label: "Marcas", value: brands.length },
+                { label: "Referencias", value: productCount },
+                { label: "Unidades", value: unitCount },
+              ].map((stat) => (
+                <div key={stat.label} className="flex-1 basis-30">
+                  <dt className="eyebrow">{stat.label}</dt>
+                  <dd className="mt-0.5 font-mono text-2xl font-medium tracking-[-0.02em] tabular-nums text-ink">
+                    {stat.value}
+                  </dd>
+                </div>
+              ))}
+            </dl>
+          </div>
         </section>
 
-        <section aria-labelledby="brands-heading">
+        {/* Dissolves the hero into the page instead of cutting it off, which on
+            light was a near-black rail meeting beige at a hard line. */}
+        <div aria-hidden="true" className="hero-hem h-24" />
+
+        <section
+          id="marcas"
+          aria-labelledby="brands-heading"
+          className="page-container pt-10"
+        >
           <h2
             id="brands-heading"
-            className="mt-14 mb-4.5 text-[13px] font-semibold tracking-[0.2em] uppercase text-ink-subtle"
+            className="mb-4.5 text-[13px] font-semibold tracking-[0.2em] uppercase text-ink-subtle"
           >
             Marcas
           </h2>

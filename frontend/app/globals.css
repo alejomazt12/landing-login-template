@@ -42,6 +42,16 @@
      by the `brand-ink` utility, which resolves it against the element's own
      --brand. */
   --brand-ink-strength: 100%;
+
+  /* The hero band sits on footage of a dim showroom, so it carries its own
+     fixed palette instead of following the theme: the veil below stays dark on
+     light, and themed ink would put near-black text on a near-black frame.
+     Declared once here and deliberately absent from the theme blocks. */
+  --hero-ink: #f6f7f9;
+  --hero-ink-muted: #c8ced8;
+  --hero-accent: #f2a63c;
+  --hero-accent-hover: #f8c273;
+  --hero-veil: #0d0f14;
 }
 
 @media (prefers-color-scheme: light) {
@@ -50,8 +60,10 @@
     --background-alt: #e3e0d8;
     --surface: #f8f7f4;
     --surface-raised: #ffffff;
-    --line: #d2cec4;
-    --line-strong: #b0aba0;
+    /* Surface and background sit 5% apart on light, so the border is what
+       gives a card its edge. At #d2cec4 it read as no edge at all. */
+    --line: #c9c3b6;
+    --line-strong: #a29c8d;
     --text: #1a1c20;
     --text-muted: #545861;
     --text-subtle: #5f636b;
@@ -85,8 +97,8 @@
   --background-alt: #e3e0d8;
   --surface: #f8f7f4;
   --surface-raised: #ffffff;
-  --line: #d2cec4;
-  --line-strong: #b0aba0;
+  --line: #c9c3b6;
+  --line-strong: #a29c8d;
   --text: #1a1c20;
   --text-muted: #545861;
   --text-subtle: #5f636b;
@@ -192,6 +204,11 @@
   --color-accent-2: var(--accent-2);
   --color-accent-soft: var(--accent-soft);
   --color-on-accent: var(--on-accent);
+  /* The rest of the hero palette reaches components through `on-hero`, which
+     re-points the ordinary tokens. Only these two are named directly, by the
+     call to action and by the fade that dissolves the hero into the page. */
+  --color-hero-accent-hover: var(--hero-accent-hover);
+  --color-hero-veil: var(--hero-veil);
   --color-success: var(--success);
   --color-warning: var(--warning);
   --color-danger: var(--danger);
@@ -250,14 +267,73 @@
   padding-inline: 1.75rem;
 }
 
-/* Small uppercase mono label used for eyebrows, field labels and stat names. */
+/* Small uppercase mono label used for eyebrows, field labels and stat names.
+   The color is indirected through --eyebrow-ink so a section standing on an
+   image can lift it without restating the rest of the rule; --text-subtle
+   fails contrast the moment a photograph shows through behind it. */
 @utility eyebrow {
   font-family: var(--font-plex-mono), ui-monospace, monospace;
   font-size: 11px;
   line-height: 1.5;
   letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: var(--text-subtle);
+  color: var(--eyebrow-ink, var(--text-subtle));
+}
+
+/* Re-points the theme variables a subtree resolves against, so anything laid
+   over the hero reads light in both themes without the component knowing it is
+   standing on a photograph. A variable swap, like the theme itself — which is
+   why ThemeToggle needs no prop to come along. */
+@utility on-hero {
+  /* `color` inherits as an already-resolved value, so re-pointing --text alone
+     leaves anything without a color utility reading the page's ink. Restating
+     it here is what makes the subtree pick the new value up. */
+  color: var(--text);
+
+  --text: var(--hero-ink);
+  --text-muted: var(--hero-ink-muted);
+  --text-subtle: var(--hero-ink-muted);
+  --line: color-mix(in srgb, var(--hero-ink) 22%, transparent);
+  --line-strong: color-mix(in srgb, var(--hero-ink) 38%, transparent);
+  --surface: color-mix(in srgb, var(--hero-veil) 45%, transparent);
+  --surface-raised: color-mix(in srgb, var(--hero-veil) 58%, transparent);
+  --background-alt: color-mix(in srgb, var(--hero-veil) 72%, transparent);
+  --accent: var(--hero-accent);
+  --eyebrow-ink: var(--hero-ink-muted);
+}
+
+/* Dissolves the hero's bottom edge into the page. Weighted towards the dark
+   end on purpose: an even ramp from near-black to the light ground spends most
+   of its travel in the greys between them, which reads as a smudge rather than
+   a transition. */
+@utility hero-hem {
+  background-image: linear-gradient(
+    to bottom,
+    var(--hero-veil) 0%,
+    color-mix(in srgb, var(--hero-veil) 58%, var(--background)) 26%,
+    color-mix(in srgb, var(--hero-veil) 20%, var(--background)) 58%,
+    var(--background) 100%
+  );
+}
+
+/* Darkens the hero footage enough that the copy over it keeps its contrast on
+   every frame of the loop, weighted to the left where the copy sits and to the
+   bottom where the totals rail does. Measured against the brightest frame:
+   ink lands at 12:1, the amber accent at 6.5:1. */
+@utility hero-veil {
+  background-image:
+    linear-gradient(
+      to top,
+      color-mix(in srgb, var(--hero-veil) 90%, transparent) 0%,
+      color-mix(in srgb, var(--hero-veil) 45%, transparent) 48%,
+      color-mix(in srgb, var(--hero-veil) 58%, transparent) 100%
+    ),
+    linear-gradient(
+      to right,
+      color-mix(in srgb, var(--hero-veil) 84%, transparent) 0%,
+      color-mix(in srgb, var(--hero-veil) 52%, transparent) 42%,
+      color-mix(in srgb, var(--hero-veil) 12%, transparent) 100%
+    );
 }
 
 /* Brand color darkened for legibility when used as text. See

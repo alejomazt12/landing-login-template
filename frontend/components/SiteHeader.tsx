@@ -9,13 +9,28 @@ type Props = {
   action?: React.ReactNode;
   /** The site the page belongs to. Names the header and marks the selector. */
   site?: SiteId;
+  /**
+   * Lay the header over a dark hero instead of on the page background: no bar,
+   * no border, and `on-hero` re-points the color tokens so everything inside —
+   * the theme toggle included — turns light without being told.
+   *
+   * It leaves the flow when overlaid, so the page below it starts at the top
+   * of the viewport and the header scrolls away with the hero.
+   */
+  overlay?: boolean;
 };
 
-export default function SiteHeader({ action, site = "carros" }: Props) {
+export default function SiteHeader({ action, site = "carros", overlay = false }: Props) {
   const current = getSite(site);
 
   return (
-    <header className="sticky top-0 z-20 border-b border-line bg-canvas/90 backdrop-blur-[10px]">
+    <header
+      className={
+        overlay
+          ? "on-hero absolute inset-x-0 top-0 z-20"
+          : "sticky top-0 z-20 border-b border-line bg-canvas/90 backdrop-blur-[10px]"
+      }
+    >
       <div className="page-container flex min-h-[68px] items-center justify-between gap-5">
         <div className="flex items-center gap-3.5">
           <Link
@@ -53,7 +68,7 @@ export default function SiteHeader({ action, site = "carros" }: Props) {
               </svg>
             </summary>
 
-            <div className="absolute top-[calc(100%+12px)] left-0 z-30 w-64 rounded-md border border-line bg-surface-raised p-1.5 shadow-[0_18px_40px_-18px_rgb(0_0_0/0.45)]">
+            <div className="absolute top-[calc(100%+12px)] left-0 z-30 w-64 rounded-md border border-line bg-surface-raised p-1.5 backdrop-blur-[10px] shadow-[0_18px_40px_-18px_rgb(0_0_0/0.45)]">
               <p className="eyebrow px-3 pt-2 pb-1.5">Cambiar de sitio</p>
               <ul>
                 {sites.map((item) => {
